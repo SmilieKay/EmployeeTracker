@@ -1,5 +1,8 @@
 const inquirer = require('inquirer');
 const connection = require('./connection');
+const dotenv = require('dotenv');
+dotenv.config();
+
 
 function mainMenu() {
   inquirer.prompt([
