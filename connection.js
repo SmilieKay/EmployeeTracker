@@ -1,3 +1,6 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
 const mysql = require('mysql');
 const connection = mysql.createConnection({
     host: 'localhost', 
