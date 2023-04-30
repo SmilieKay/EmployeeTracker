@@ -21,6 +21,8 @@ function mainMenu() {
           "View employees by department",
           'View employees by manager', 
           "Update an employee role",
+          "Delete an employee",
+          "View department's utilized budget",
           "Exit",
         ],
       },
@@ -58,6 +60,13 @@ function mainMenu() {
         case "Update an employee role":
           updateEmployeeRole();
           break;
+          
+          case "Delete an employee":
+            deleteEmployee();
+            break;
+            case "View department's utilized budget":
+              viewDepartmentBudget();
+              break;
         case "Exit":
           connection.end();
           break;
@@ -532,6 +541,76 @@ async function updateEmployeeRole() {
       );
     });
 }
+
+
+
+async function deleteEmployee() {
+  const employees = await getEmployees();
+
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "employeeId",
+        message: "Select the employee you want to delete:",
+        choices: employees.map((employee) => ({
+          name: `${employee.first_name} ${employee.last_name}`,
+          value: employee.id,
+        })),
+      },
+    ])
+    .then((answer) => {
+      connection.query(
+        "DELETE FROM employees WHERE id = ?",
+        [answer.employeeId],
+        (err, result) => {
+          if (err) {
+            console.error("Error deleting employee:", err);
+          } else {
+            console.log("\nEmployee deleted successfully.");
+          }
+          mainMenu();
+        }
+      );
+    });
+}
+
+async function viewDepartmentBudget() {
+  const departments = await getDepartments();
+
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "departmentId",
+        message: "Select the department you want to view the utilized budget for:",
+        choices: departments.map((department) => ({
+          name: department.name,
+          value: department.id,
+        })),
+      },
+    ])
+    .then((answer) => {
+      const query = `
+        SELECT departments.id, departments.name, SUM(roles.salary) AS utilized_budget
+        FROM employees
+        JOIN roles ON employees.role_id = roles.id
+        JOIN departments ON roles.department_id = departments.id
+        WHERE departments.id = ?
+        GROUP BY departments.id, departments.name
+      `;
+
+      connection.query(query, [answer.departmentId], (err, results) => {
+        if (err) {
+          console.error("Error fetching department's utilized budget:", err);
+        } else {
+          console.table(results);
+        }
+        mainMenu();
+      });
+    });
+}
+
 
 // Start the application
 mainMenu();
